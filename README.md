@@ -10,17 +10,24 @@ plugin you can see across all your teams.
 | Tool | Endpoint | Purpose |
 | --- | --- | --- |
 | `list_plugins` | `GET /api/plugins/` | The plugins you can access (ids/codes for the `plugin` arg). |
+| `list_teams` | `GET /api/teams/` | The teams you belong to and your role. |
 | `list_frequent_crashes` | `GET /api/frequent/` | Top crash locations grouped by function, with counts. |
 | `list_recent_crashes` | `GET /api/recent/` | Most recent individual crashes, newest first. |
 | `search_crashes` | `GET /api/search/` | Search by crash filename / function text. |
 | `get_crash_log` | `GET /api/log/{id}/` | Full details + symbolicated stack for one crash. |
 | `get_crash_stats` | `GET /api/stats/` | Totals, last 7/30 days, unique functions, by version/platform. |
 | `list_versions` | `GET /api/versions/` | Distinct versions and host apps (for filters). |
+| `list_comments` | `GET /api/comments/` | Comments on a crash function. |
+| `add_comment` | `POST /api/comments/` | Add a comment to a crash function (attributed to you). |
+| `add_plugin` | `POST /api/plugins/` | Register a plugin under a team (owner/admin only). |
+| `delete_plugin` | `POST /api/plugins/delete/` | Delete a plugin and all its data (owner/admin; needs `confirm`). |
 
-Every tool except `list_plugins` takes an optional `plugin` (id, code, or name).
-It's only required when you can access more than one plugin — otherwise the sole
-plugin is used. The list tools also accept filters: `ver`, `verop`
-(`=`/`>=`/`<=`), `os` (`win`/`mac`/`linux`), `app`, `limit`.
+Crash/comment tools take an optional `plugin` (id, code, or name) — only required
+when you can access more than one plugin. The list tools also accept filters:
+`ver`, `verop` (`=`/`>=`/`<=`), `os` (`win`/`mac`/`linux`), `app`, `limit`.
+Write tools are permission-checked server-side: comments need team membership;
+adding/deleting a plugin needs owner/admin on the team, and `delete_plugin`
+requires `confirm` to equal the plugin's exact `plugin_code`.
 
 ## Configuration
 

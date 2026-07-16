@@ -55,6 +55,23 @@ async function apiGet(path: string, params: Record<string, unknown> = {}): Promi
   return res.json();
 }
 
+async function apiPost(path: string, body: Record<string, unknown> = {}): Promise<unknown> {
+  const res = await fetch(BASE_URL + path, {
+    method: "POST",
+    headers: { "X-API-Key": API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`POST ${path} failed: ${res.status} ${res.statusText} ${text}`.trim());
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
 function json(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
 }
@@ -115,6 +132,55 @@ server.tool(
   "List the distinct plugin versions and host application names present in a plugin's crash data. Useful for building filters.",
   { ...pluginArg },
   async (args) => json(await apiGet("/api/versions/", args))
+);
+
+server.tool(
+  "list_comments",
+  "List the comments on a crash function (a crash location) for a plugin.",
+  {
+    ...pluginArg,
+    func: z.string().min(1).describe("The crash function/location the comments hang off (as shown by list_frequent_crashes / get_crash_log)."),
+  },
+  async (args) => json(await apiGet("/api/comments/", args))
+);
+
+server.tool(
+  "add_comment",
+  "Add a comment to a crash function (a crash location) for a plugin. Attributed to you.",
+  {
+    ...pluginArg,
+    func: z.string().min(1).describe("The crash function/location to comment on."),
+    comment: z.string().min(1).describe("The comment text."),
+  },
+  async (args) => json(await apiPost("/api/comments/", args))
+);
+
+server.tool(
+  "list_teams",
+  "List the teams you belong to, with your role — useful for choosing where to add a plugin.",
+  {},
+  async () => json(await apiGet("/api/teams/"))
+);
+
+server.tool(
+  "add_plugin",
+  "Register a new plugin under one of your teams. Requires owner/admin on that team.",
+  {
+    team: z.string().optional().describe("Which team (id or name) to add the plugin to. Omit if you manage only one team (see list_teams)."),
+    name: z.string().min(2).describe('Display name, e.g. "Identity".'),
+    plugin_code: z.string().min(1).describe('Bundle id / code used to match crashes, e.g. "com.socalabs.identity".'),
+  },
+  async (args) => json(await apiPost("/api/plugins/", args))
+);
+
+server.tool(
+  "delete_plugin",
+  "Permanently delete a plugin and ALL its crashes, symbols and comments. Owner/admin only; irreversible.",
+  {
+    ...pluginArg,
+    confirm: z.string().describe("Must equal the plugin's exact plugin_code, as a safety check, to actually delete."),
+  },
+  async (args) => json(await apiPost("/api/plugins/delete/", args))
 );
 
 const transport = new StdioServerTransport();
