@@ -45,7 +45,7 @@ Run it on your own machine — it talks to the public crash site by default, so
 there's no server-side setup.
 
 ```bash
-git clone https://github.com/Rabien-Software/crashwebsite-mcp.git
+git clone https://github.com/PluginCrashReports/crashwebsite-mcp.git
 cd crashwebsite-mcp
 npm install
 npm run build
