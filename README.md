@@ -1,13 +1,15 @@
 # crashwebsite-mcp
 
-An [MCP](https://modelcontextprotocol.io) server that exposes a plugin's crash
+An [MCP](https://modelcontextprotocol.io) server that exposes your plugin crash
 reports to Claude. It is a thin, read-only client over the crash site's JSON API
-(`/api/...`), scoped to a single plugin by its **crash API key**.
+(`/api/...`), authenticated by your **personal API key** and scoped to every
+plugin you can see across all your teams.
 
 ## Tools
 
 | Tool | Endpoint | Purpose |
 | --- | --- | --- |
+| `list_plugins` | `GET /api/plugins/` | The plugins you can access (ids/codes for the `plugin` arg). |
 | `list_frequent_crashes` | `GET /api/frequent/` | Top crash locations grouped by function, with counts. |
 | `list_recent_crashes` | `GET /api/recent/` | Most recent individual crashes, newest first. |
 | `search_crashes` | `GET /api/search/` | Search by crash filename / function text. |
@@ -15,17 +17,18 @@ reports to Claude. It is a thin, read-only client over the crash site's JSON API
 | `get_crash_stats` | `GET /api/stats/` | Totals, last 7/30 days, unique functions, by version/platform. |
 | `list_versions` | `GET /api/versions/` | Distinct versions and host apps (for filters). |
 
-`list_frequent_crashes` and `list_recent_crashes` accept optional filters:
-`ver`, `verop` (`=`/`>=`/`<=`), `os` (`win`/`mac`/`linux`), `app`, `limit`.
+Every tool except `list_plugins` takes an optional `plugin` (id, code, or name).
+It's only required when you can access more than one plugin — otherwise the sole
+plugin is used. The list tools also accept filters: `ver`, `verop`
+(`=`/`>=`/`<=`), `os` (`win`/`mac`/`linux`), `app`, `limit`.
 
 ## Configuration
 
 Set via environment variables:
 
-- `CRASH_API_KEY` (**required**) — a plugin's crash API key. Find it under the
-  plugin's **Keys** page on the crash site. Every request is scoped to that
-  plugin. Note: this key also ships (world-readable) in installed plugins, so it
-  identifies rather than secures the plugin — treat this API as public read.
+- `CRASH_API_KEY` (**required**) — your personal API key. Generate it on the
+  crash site's **Account** page. It grants read access to every plugin you can
+  see; keep it secret, like a password.
 - `CRASH_API_BASE_URL` (optional) — defaults to
   `https://crashreports.rabiensoftware.com`.
 
