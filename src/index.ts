@@ -183,6 +183,31 @@ server.tool(
   async (args) => json(await apiPost("/api/plugins/delete/", args))
 );
 
+server.tool(
+  "list_symbols",
+  "List a plugin's uploaded debug symbols grouped by version and platform, with file count, total size and how many crashes exist for that build. Use this to find old builds whose symbols can be deleted.",
+  {
+    ...pluginArg,
+    ver: z.string().optional().describe("Only this version. Omit for every version."),
+    files: z.boolean().optional().describe("Also return the individual symbol files with their ids (default false)."),
+  },
+  async ({ files, ...args }) => json(await apiGet("/api/symbols/", { ...args, files: files ? 1 : undefined }))
+);
+
+server.tool(
+  "delete_symbols",
+  "Delete a plugin's debug symbols for old builds to free disk space. Owner/admin only. Select by `id` (one file), `version` (exact), or `before_version` (every version older than this, natural ordering), optionally narrowed by `platform`. Run with dry_run first to see what would be removed. Once a version's symbols are gone, new crashes for that version are discarded on upload and existing ones can no longer be re-symbolicated.",
+  {
+    ...pluginArg,
+    id: z.number().int().optional().describe("Delete one symbol file by id (see list_symbols with files=true)."),
+    version: z.string().optional().describe('Delete every symbol file for exactly this version, e.g. "1.0.7".'),
+    before_version: z.string().optional().describe('Delete every symbol file for versions older than this, e.g. "1.2.0" removes 1.1.x, 1.0.x, ...'),
+    platform: z.enum(["mac", "win", "linux"]).optional().describe("Only this platform. Omit for all."),
+    dry_run: z.boolean().optional().describe("Report what would be deleted without deleting anything (default false)."),
+  },
+  async (args) => json(await apiPost("/api/symbols/delete/", args))
+);
+
 const transport = new StdioServerTransport();
 await server.connect(transport);
 console.error(`crashwebsite-mcp running on stdio (base ${BASE_URL})`);
